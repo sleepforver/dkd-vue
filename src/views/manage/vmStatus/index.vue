@@ -15,16 +15,14 @@
       </el-form-item>
     </el-form>
 
-  
-
     <el-table v-loading="loading" :data="vmList" @selection-change="handleSelectionChange">
-      <el-table-column label="序号" type="index" width="55" align="center" />
+      <el-table-column label="序号" type="index" width="60" align="center" prop="id" />
       <el-table-column label="设备编号" align="center" prop="innerCode" />
-      <el-table-column label="设备型号" align="center" prop="vmTypeId" >
+      <el-table-column label="设备型号" align="center" prop="vmTypeId">
         <template #default="scope">
-          <div v-for="item in vmTypeList" :key="item.id">
-            <span v-if="item.id==scope.row.vmTypeId">{{ item.name }}</span>
-          </div>
+            <div v-for="item in vmTypeList" :key="item.value">
+            <span v-if="item.id === scope.row.vmTypeId">{{ item.name }}</span>
+            </div>
         </template>
       </el-table-column>
       <el-table-column label="详细地址" align="left" prop="addr" show-overflow-tooltip="true"/>
@@ -33,14 +31,14 @@
           <dict-tag :options="vm_status" :value="scope.row.vmStatus"/>
         </template>
       </el-table-column>
-      <el-table-column label="设备状态" align="center" prop="vmStatus">
+            <el-table-column label="设备状态" align="center" prop="vmStatus">
         <template #default="scope">
-         {{ scope.row.runningStatus!=null? JSON.parse(scope.row.runningStatus).status==true?'正常':'异常' :'异常'}}
+            <span>{{ scope.row.runningStatus ? (JSON.parse(scope.row.runningStatus).status ? '正常' : '异常') : '异常' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary"  @click="getVmInfo(scope.row)" v-hasPermi="['manage:vm:query']">查看详情</el-button>
+          <el-button link type="primary" @click="getVmInfo(scope.row)" v-hasPermi="['manage:vm:query']">查看详情</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -53,20 +51,20 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改设备管理对话框 -->
+    <!-- 查看详情对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" append-to-body>
+ 
     </el-dialog>
   </div>
 </template>
 
 <script setup name="Vm">
 import { listVm, getVm, delVm, addVm, updateVm } from "@/api/manage/vm";
-import{listVmType} from "@/api/manage/vmType";
-import{listPartner} from "@/api/manage/partner";
-import{loadAllParams} from "@/api/page";
-import{listNode} from "@/api/manage/node";
-import{listRegion} from "@/api/manage/region";
-import { ref } from "vue";
+import { listPartner } from "@/api/manage/partner";
+import { listVmType } from "@/api/manage/vmType";
+import { loadAllParams } from '@/api/page';
+import { listNode } from "@/api/manage/node";
+import { listRegion } from "@/api/manage/region";
 
 const { proxy } = getCurrentInstance();
 const { vm_status } = proxy.useDict('vm_status');
@@ -175,7 +173,7 @@ function handleAdd() {
   title.value = "添加设备管理";
 }
 
-/** 修改按钮操作 */
+/** 查看详情操作 */
 function getVmInfo(row) {
   reset();
   const _id = row.id || ids.value
@@ -226,7 +224,7 @@ function handleExport() {
 }
 
 /* 查询设备类型列表 */
-const vmTypeList=ref([]);
+const vmTypeList = ref([]);
 function getVmTypeList() {
   listVmType(loadAllParams).then(response => {
     vmTypeList.value = response.rows;
@@ -234,7 +232,7 @@ function getVmTypeList() {
 }
 
 /* 查询合作商列表 */
-const partnerList=ref([]);
+const partnerList = ref([]);
 function getPartnerList() {
   listPartner(loadAllParams).then(response => {
     partnerList.value = response.rows;
@@ -242,7 +240,7 @@ function getPartnerList() {
 }
 
 /* 查询点位列表 */
-const nodeList=ref([]);
+const nodeList = ref([]);
 function getNodeList() {
   listNode(loadAllParams).then(response => {
     nodeList.value = response.rows;
@@ -250,7 +248,7 @@ function getNodeList() {
 }
 
 /* 查询区域列表 */
-const regionList=ref([]);
+const regionList = ref([]);
 function getRegionList() {
   listRegion(loadAllParams).then(response => {
     regionList.value = response.rows;

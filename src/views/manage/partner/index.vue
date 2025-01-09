@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="90px">
-      <el-form-item label="合作商名称" prop="partnerName">
+      <el-form-item label="合作商搜索" prop="partnerName" width="30px">
         <el-input
           v-model="queryParams.partnerName"
           placeholder="请输入合作商名称"
@@ -59,12 +59,14 @@
 
     <el-table v-loading="loading" :data="partnerList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" type="index" width="50" align="center" prop="id" />
+      <el-table-column label="序号" type="index" width=“20” align="center" prop="id" />
       <el-table-column label="合作商名称" align="center" prop="partnerName" />
-      <el-table-column label="点位数" align="center" prop="nodeCount" />
+       <el-table-column label="点位数" align="center" prop="nodeCount" />
       <el-table-column label="账号" align="center" prop="account" />
-      <el-table-column label="分成比例" align="center" prop="profitRatio" >
-        <template #default="scope">{{ scope.row.profitRatio }}%</template>
+      <el-table-column label="分成比例" align="center" prop="profitRatio">
+        <template #default="scope">
+          {{ scope.row.profitRatio }}%
+        </template>
       </el-table-column>
       <el-table-column label="联系人" align="center" prop="contactPerson" />
       <el-table-column label="联系电话" align="center" prop="contactPhone" />
@@ -98,17 +100,17 @@
         <el-form-item label="联系电话" prop="contactPhone">
           <el-input v-model="form.contactPhone" placeholder="请输入联系电话" />
         </el-form-item>
-        <el-form-item label="创建时间" prop="createTime" v-if="form.id!=null">
-          {{form.createTime}}
+        <el-form-item v-if="form.id" label="创建时间" prop="createTime">
+            <span>{{ form.createTime }}</span>
         </el-form-item>
         <el-form-item label="分成比例" prop="profitRatio">
-          <el-input v-model="form.profitRatio" placeholder="请输入分成比例" />
+          <el-input v-model="form.profitRatio" placeholder="请输入分成比例" suffix-icon="el-icon-percent" />
         </el-form-item>
-        <el-form-item label="账号" prop="account" v-if="form.id==null">
+        <el-form-item v-if="!form.id" label="账号" prop="account">
           <el-input v-model="form.account" placeholder="请输入账号" />
         </el-form-item>
-        <el-form-item label="密码" prop="password" v-if="form.id==null">
-          <el-input v-model="form.password" type="password" placeholder="请输入密码" />
+        <el-form-item v-if="!form.id" label="密码" prop="password">
+          <el-input v-model="form.password" placeholder="请输入密码" show-password />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -119,21 +121,39 @@
       </template>
     </el-dialog>
 
-    <!-- 查看合作商详情对话框 -->
+<!-- 查看合作商详情对话框 -->
     <el-dialog title="合作商详情" v-model="partnerInfoOpen" width="500px" append-to-body>
-    <!-- 使用el-descriptions组件以卡片形式展示信息，更加整洁 -->
-    <el-descriptions :column="2" border>
-      <el-descriptions-item label="合作商名称">{{ form.partnerName }}</el-descriptions-item>
-      <el-descriptions-item label="联系人">{{ form.contactPerson }}</el-descriptions-item>
-      <el-descriptions-item label="联系电话">{{ form.contactPhone }}</el-descriptions-item>
-      <el-descriptions-item label="分成比例">{{ form.profitRatio }}%</el-descriptions-item>
-    </el-descriptions>
-  </el-dialog>
+    <!-- 定义两行数据，第一行为合作商名称，联系人，第二行为联系电话，分成比例（后有%） -->
+    <el-table :data="[form]" border style="width: 100%">
+      <el-table-column prop="partnerName" label="合作商名称" align="center">
+      <template #default="scope">
+        <span>{{ scope.row.partnerName }}</span>
+      </template>
+      </el-table-column>
+      <el-table-column prop="contactPerson" label="联系人" align="center">
+      <template #default="scope">
+        <span>{{ scope.row.contactPerson }}</span>
+      </template>
+      </el-table-column>
+    </el-table>
+    <el-table :data="[form]" border style="width: 100%; margin-top: 10px;">
+      <el-table-column prop="contactPhone" label="联系电话" align="center">
+      <template #default="scope">
+        <span>{{ scope.row.contactPhone }}</span>
+      </template>
+      </el-table-column>
+      <el-table-column prop="profitRatio" label="分成比例" align="center">
+      <template #default="scope">
+        <span>{{ scope.row.profitRatio }}%</span>
+      </template>
+      </el-table-column>
+    </el-table>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="Partner">
-import { listPartner, getPartner, delPartner, addPartner, updatePartner,resetPartnerPwd } from "@/api/manage/partner";
+import { listPartner, getPartner, delPartner, addPartner, updatePartner, resetPartnerPwd } from "@/api/manage/partner";
 
 const { proxy } = getCurrentInstance();
 
@@ -249,11 +269,12 @@ function handleUpdate(row) {
     title.value = "修改合作商管理";
   });
 }
-/* 查看合作商详情 */
+
+/** 查看合作商详情  */
 const partnerInfoOpen=ref(false)
 function getParnterInfo(row){
   reset();
-  const _id = row.id 
+  const _id = row.id
   getPartner(_id).then(response => {
     form.value = response.data;
     partnerInfoOpen.value=true;
@@ -292,8 +313,8 @@ function handleDelete(row) {
   }).catch(() => {});
 }
 
-/* 重置合作商密码 */
-function resetPwd(row){
+/** 重置合作商密码 */
+function resetPwd(row) {
   const _id = row.id
   proxy.$modal.confirm('你确定要重置该合作商密码吗？').then(function() {
     return resetPartnerPwd(_id);

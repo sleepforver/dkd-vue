@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="点位名称" prop="nodeName">
+      <el-form-item label="点位搜索" prop="nodeName">
         <el-input
           v-model="queryParams.nodeName"
           placeholder="请输入点位名称"
@@ -12,14 +12,22 @@
       <el-form-item label="区域搜索" prop="regionId">
         <!-- <el-input
           v-model="queryParams.regionId"
-          placeholder="请输入区域ID"
+          placeholder="请输入区域id"
           clearable
           @keyup.enter="handleQuery"
         /> -->
-        <el-select  v-model="queryParams.regionId" placeholder="请选择区域" clearable>
-          <el-option v-for="item in regionList" :key="item.id" :label="item.regionName" :value="item.id"></el-option>
+        <el-select v-model="queryParams.regionId" placeholder="请选择区域" clearable>
+          <el-option v-for="region in regionList" :key="region.id" :label="region.regionName" :value="region.id"></el-option>
         </el-select>
       </el-form-item>
+      <!-- <el-form-item label="合作商id" prop="partnerId">
+        <el-input
+          v-model="queryParams.partnerId"
+          placeholder="请输入合作商id"
+          clearable
+          @keyup.enter="handleQuery"
+        />
+      </el-form-item> -->
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -66,25 +74,25 @@
         >导出</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+        </el-row>
 
-    <el-table v-loading="loading" :data="nodeList" @selection-change="handleSelectionChange">
+        <el-table v-loading="loading" :data="nodeList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" type="index" width="50" align="center" prop="id" />
-      <el-table-column label="点位名称" align="center" prop="nodeName" />
-      <el-table-column label="所在区域" align="center" prop="region.regionName" />
-      <el-table-column label="商圈类型" align="center" prop="businessType">
+      <el-table-column label="点位名称" align="center" prop="nodeName" show-overflow-tooltip />
+      <el-table-column label="所在区域" align="center" prop="region.regionName" show-overflow-tooltip />
+      <el-table-column label="商圈类型" align="center" prop="businessType" show-overflow-tooltip>
         <template #default="scope">
           <dict-tag :options="business_type" :value="scope.row.businessType"/>
         </template>
       </el-table-column>
-      <el-table-column label="合作商" align="center" prop="partner.partnerName" />
-      <el-table-column label="详细地址" align="left" prop="address" show-overflow-tooltip/>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="合作商" align="center" prop="partner.partnerName" show-overflow-tooltip />
+      <el-table-column label="详细地址" align="left" prop="address" show-overflow-tooltip />
+     <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
-          <el-button link type="primary"  @click="getNodeInfo(scope.row)" v-hasPermi="['manage:vm:list']">查看详情</el-button>
+          <el-button link type="primary"  @click="getNodeInfo(scope.row)" v-hasPermi="['manage:vm:query']">查看详情</el-button>
           <el-button link type="primary"  @click="handleUpdate(scope.row)" v-hasPermi="['manage:node:edit']">修改</el-button>
-          <el-button link type="primary"  @click="handleDelete(scope.row)" v-hasPermi="['manage:node:remove']">删除</el-button>
+          <el-button link type="primary" @click="handleDelete(scope.row)" v-hasPermi="['manage:node:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -103,13 +111,13 @@
         <el-form-item label="点位名称" prop="nodeName">
           <el-input v-model="form.nodeName" placeholder="请输入点位名称" />
         </el-form-item>
-        <el-form-item label="所属区域" prop="regionId">
-          <!-- <el-input v-model="form.regionId" placeholder="请输入区域ID" /> -->
-           <el-select v-model="form.regionId" placeholder="请选择区域">
-            <el-option v-for="item in regionList" :key="item.id" :label="item.regionName" :value="item.id"></el-option>
-          </el-select>
+         <el-form-item label="所在区域" prop="regionId">
+            <!-- <el-input v-model="form.regionId" placeholder="请输入区域id" /> -->
+            <el-select v-model="form.regionId" placeholder="请选择区域">
+            <el-option v-for="region in regionList" :key="region.id" :label="region.regionName" :value="region.id"></el-option>
+            </el-select>
         </el-form-item>
-        <el-form-item label="商圈类型" prop="businessType">
+        <el-form-item label="所属商圈" prop="businessType">
           <el-select v-model="form.businessType" placeholder="请选择商圈类型">
             <el-option
               v-for="dict in business_type"
@@ -120,10 +128,10 @@
           </el-select>
         </el-form-item>
         <el-form-item label="归属合作商" prop="partnerId">
-          <!-- <el-input v-model="form.partnerId" placeholder="请输入合作商ID" /> -->
-           <el-select v-model="form.partnerId" placeholder="请选择合作商">
-            <el-option v-for="item in partnerList" :key="item.id" :label="item.partnerName" :value="item.id"></el-option>
-          </el-select>
+        <!-- <el-input v-model="form.partnerId" placeholder="请输入合作商id" /> -->
+        <el-select v-model="form.partnerId" placeholder="请选择合作商">
+          <el-option v-for="partner in partnerList" :key="partner.id" :label="partner.partnerName" :value="partner.id"></el-option>
+        </el-select>
         </el-form-item>
         <el-form-item label="详细地址" prop="address">
           <el-input v-model="form.address" type="textarea" placeholder="请输入内容" />
@@ -136,33 +144,34 @@
         </div>
       </template>
     </el-dialog>
-    <!-- 查看详情 -->
-     <el-dialog title="点位详情" v-model="nodeOpen" width="600px" append-to-body>
-        <el-table  :data="vmList" >
-        <el-table-column label="序号" type="index" width="55" align="center" />
-        <el-table-column label="设备编号" align="center" prop="innerCode" />
-        <el-table-column label="设备状态" align="center" prop="vmStatus">
+
+    <!-- 查看详情对话框 -->
+      <el-dialog title="点位详情" v-model="nodeOpen" width="600px" append-to-body>
+      <el-table :data="vmList">
+        <el-table-column label="序号" type="index" width="50" align="center" />
+        <el-table-column label="设备编号" prop="innerCode" align="center" show-overflow-tooltip />
+         <el-table-column label="设备状态" align="center" prop="vmStatus">
+        <template #default="scope">
+          <dict-tag :options="vm_status" :value="scope.row.vmStatus"/>
+        </template>
+      </el-table-column>
+        <el-table-column label="最后一次供货时间" prop="lastSupplyTime" align="center" show-overflow-tooltip>
           <template #default="scope">
-            <dict-tag :options="vm_status" :value="scope.row.vmStatus"/>
-          </template>
-        </el-table-column>
-        <el-table-column label="最后一次供货时间" align="center" prop="vmStatus">
-          <template #default="scope">
-            {{parseTime(scope.row.lastSupplyTime,'{y}-{m}-{d} {h}:{i}:{s}')}}
+            {{ parseTime(scope.row.lastSupplyTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
           </template>
         </el-table-column>
       </el-table>
-    </el-dialog>
+      </el-dialog>
   </div>
 </template>
 
+
 <script setup name="Node">
 import { listNode, getNode, delNode, addNode, updateNode } from "@/api/manage/node";
-import {listRegion} from "@/api/manage/region";
-import {listPartner} from "@/api/manage/partner";
-import{loadAllParams} from "@/api/page";
-import{listVm} from "@/api/manage/vm";
-import { ref } from "vue";
+import { listRegion } from "@/api/manage/region";
+import { listPartner} from "@/api/manage/partner";
+import {loadAllParams} from "@/api/page";
+import { listVm } from "@/api/manage/vm";
 
 const { proxy } = getCurrentInstance();
 const { business_type } = proxy.useDict('business_type');
@@ -198,10 +207,10 @@ const data = reactive({
       { required: true, message: "商圈类型不能为空", trigger: "change" }
     ],
     regionId: [
-      { required: true, message: "区域ID不能为空", trigger: "blur" }
+      { required: true, message: "区域id不能为空", trigger: "blur" }
     ],
     partnerId: [
-      { required: true, message: "合作商ID不能为空", trigger: "blur" }
+      { required: true, message: "合作商id不能为空", trigger: "blur" }
     ],
   }
 });
@@ -278,17 +287,18 @@ function handleUpdate(row) {
     title.value = "修改点位管理";
   });
 }
-/* 查看详情 */
+
+/** 查询设备列表 */
 const nodeOpen=ref(false);
-const vmList=ref([]);
-function getNodeInfo(row){
-  // 根据点位，查询设备列表
+const vmList = ref([]);
+function getNodeInfo(row) {
   loadAllParams.nodeId=row.id;
   listVm(loadAllParams).then(response => {
-    vmList.value=response.rows;
+    vmList.value = response.rows;
     nodeOpen.value=true;
   });
 }
+
 
 /** 提交按钮 */
 function submitForm() {
@@ -328,28 +338,29 @@ function handleExport() {
     ...queryParams.value
   }, `node_${new Date().getTime()}.xlsx`)
 }
+
 /* 查询所有的条件对象 */
-/* const loadAllParams=reactive({
-  pageNum:1,
-  pageSize:10000
-}) */
+// const loadAllParams=reactive({
+//   pageNum:1,
+//   pageSize:100000
+// })
 
-
-/* 查询区域列表 */
+/** 查询区域列表 */
 const regionList=ref([]);
 function getRegionList(){
-  listRegion(loadAllParams).then(response => {
+  listRegion(loadAllParams).then(response =>{
     regionList.value = response.rows;
   });
 }
 
-/* 查询合作商列表 */
+/** 查询合作商列表 */
 const partnerList=ref([]);
 function getPartnerList(){
-  listPartner(loadAllParams).then(response => {
+  listPartner(loadAllParams).then(response =>{
     partnerList.value = response.rows;
   });
 }
+
 getPartnerList();
 getRegionList();
 getList();

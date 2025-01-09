@@ -59,10 +59,10 @@
 
     <el-table v-loading="loading" :data="regionList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" type="index" width="50" align="center" prop="id" />
+      <el-table-column label="序号" type="index" width="50px" align="center" prop="id" />
       <el-table-column label="区域名称" align="center" prop="regionName" />
       <el-table-column label="点位数" align="center" prop="nodeCount" />
-      <el-table-column label="备注说明" align="center" prop="remark" />
+      <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-button link type="primary"  @click="getRegionInfo(scope.row)" v-hasPermi="['manage:node:list']">查看详情</el-button>
@@ -86,7 +86,7 @@
         <el-form-item label="区域名称" prop="regionName">
           <el-input v-model="form.regionName" placeholder="请输入区域名称" />
         </el-form-item>
-        <el-form-item label="备注说明" prop="remark">
+        <el-form-item label="备注" prop="remark">
           <el-input v-model="form.remark" type="textarea" placeholder="请输入内容" />
         </el-form-item>
       </el-form>
@@ -99,15 +99,16 @@
     </el-dialog>
 
     <!-- 查看详情对话框 -->
-     <el-dialog title="区域详情" v-model="regionInfoOpen" width="500px" append-to-body>
-      <el-form-item label="区域名称" prop="regionName">
+    <el-dialog title="区域详情" v-model="regionInfoOpen" width="500px" append-to-body>
+       <el-form-item label="区域名称" prop="regionName" >
           <el-input v-model="form.regionName" placeholder="请输入区域名称" disabled />
         </el-form-item>
+
         <label>包含点位：</label>
-    <el-table :data="nodeList" >
+        <el-table  :data="nodeList">
       <el-table-column label="序号" type="index" width="50" align="center" prop="id" />
-      <el-table-column label="点位名称" align="center" prop="nodeName" />
-      <el-table-column label="设备数量" align="center" prop="vmCount" />
+      <el-table-column label="点位名称" align="center" prop="nodeName" show-overflow-tooltip />
+      <el-table-column label="设备数量" align="center" prop="vmCount" show-overflow-tooltip />
     </el-table>
     </el-dialog>
   </div>
@@ -115,8 +116,8 @@
 
 <script setup name="Region">
 import { listRegion, getRegion, delRegion, addRegion, updateRegion } from "@/api/manage/region";
-import{listNode} from "@/api/manage/node";
-import{loadAllParams} from "@/api/page";
+import {listNode} from "@/api/manage/node";
+import {loadAllParams} from "@/api/page";
 
 const { proxy } = getCurrentInstance();
 
@@ -142,7 +143,7 @@ const data = reactive({
       { required: true, message: "区域名称不能为空", trigger: "blur" }
     ],
     remark: [
-      { required: true, message: "备注说明不能为空", trigger: "blur" }
+      { required: true, message: "备注不能为空", trigger: "blur" }
     ]
   }
 });
@@ -220,16 +221,16 @@ function handleUpdate(row) {
 const nodeList=ref([]);
 const regionInfoOpen=ref(false);
 function getRegionInfo(row){
-  // 查询区域信息
+  //查询区域信息
   reset();
-  const _id = row.id 
+  const _id = row.id
   getRegion(_id).then(response => {
     form.value = response.data;
   });
-  // 查看点位列表
+  //查询点位列表
   loadAllParams.regionId=row.id
-  listNode(loadAllParams).then(response => {
-    nodeList.value = response.rows;
+  listNode(loadAllParams).then(response =>{
+    nodeList.value=response.rows;
   });
   regionInfoOpen.value=true;
 }
